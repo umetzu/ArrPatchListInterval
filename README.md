@@ -2,6 +2,7 @@
 
 ### Description:  
 &nbsp;&nbsp;&nbsp;&nbsp;Modifies Sonarr/Radarr Plex List default time interval.  
+&nbsp;&nbsp;&nbsp;&nbsp;Close Sonarr/Radarr before running this patch.  
   
 ### Usage:  
 &nbsp;&nbsp;&nbsp;&nbsp;ArrPatchListInterval [options] [file]...  

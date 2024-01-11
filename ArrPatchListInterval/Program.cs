@@ -97,6 +97,7 @@ bool PrintWelcome()
     string message = $"""
         Description:
           Modifies Sonarr/Radarr Plex List default time interval.
+          Close Sonarr/Radarr before running this patch.
 
         Usage:
           ArrPatchListInterval [options] [file]...
