@@ -1,7 +1,9 @@
-﻿using dnlib.DotNet.Emit;
+﻿//dotnet publish -c Release -r linux-musl-x64
+
+using dnlib.DotNet.Emit;
 using dnpatch;
 
-List<string> dllPaths = [@"C:\ProgramData\Radarr\bin\Radarr.Core.dll", @"C:\ProgramData\Sonarr\bin\Sonarr.Core.dll"];
+List<string> dllPaths = GetDefaultPaths();
 double fromInterval = 6;
 double toInterval = 0.1;
 bool backup = true;
@@ -28,6 +30,24 @@ if (!autoMode)
 {
     Console.WriteLine("\nPress any key to exit . . .");
     Console.ReadKey();
+}
+
+List<string> GetDefaultPaths()
+{
+    if (OperatingSystem.IsWindows())
+    {
+        return [@"C:\ProgramData\Radarr\bin\Radarr.Core.dll", @"C:\ProgramData\Sonarr\bin\Sonarr.Core.dll"];
+    }
+    else if (OperatingSystem.IsLinux())
+    {
+        return ["/opt/radarr/Radarr.Core.dll", "/opt/sonarr/Sonarr.Core.dll"];
+    }
+    else if (OperatingSystem.IsMacOS())
+    {
+        return ["/Applications/Radarr/bin/Radarr.Core.dll", "/Applications/Sonarr/bin/Sonarr.Core.dll"];
+    }
+
+    return [];
 }
 
 Target CreateTarget(Patcher patcher, string dllPath, string ns, string cls)
@@ -94,6 +114,7 @@ bool PrintWelcome()
         return true;
     }
 
+    string defaultPathsDisplay = string.Join("\"\n\t    \"", dllPaths);
     string message = $"""
         Description:
           Modifies Sonarr/Radarr Plex List default time interval.
@@ -105,7 +126,7 @@ bool PrintWelcome()
         File:
           Multiple file paths can be specified, separated by space.
           If the path contains spaces, wrap in quotes.
-          (default: "{string.Join("\"\n\t    \"", dllPaths)}")
+          (default: "{defaultPathsDisplay}")
 
         Options:
           -f <hours> Current interval (default: {fromInterval}).
@@ -114,9 +135,14 @@ bool PrintWelcome()
           -a         Auto mode, will not require user input.
 
         Examples:
-          ArrPatchListInterval -n C:\ProgramData\Radarr\bin\Radarr.Core.dll C:\ProgramData\Sonarr\bin\Sonarr.Core.dll
-          ArrPatchListInterval -f 6 -t 1.5 "C:\Program Files\Sonarr\bin\Sonarr.Core.dll"
-          ArrPatchListInterval -a
+          Windows:
+            ArrPatchListInterval -n C:\ProgramData\Radarr\bin\Radarr.Core.dll C:\ProgramData\Sonarr\bin\Sonarr.Core.dll
+            ArrPatchListInterval -f 6 -t 1.5 "C:\Program Files\Sonarr\bin\Sonarr.Core.dll"
+          Linux:
+            ArrPatchListInterval -n /opt/Radarr/bin/Radarr.Core.dll /opt/Sonarr/bin/Sonarr.Core.dll
+            ArrPatchListInterval -f 6 -t 1.5 "/opt/Sonarr/bin/Sonarr.Core.dll"
+          Any platform:
+            ArrPatchListInterval -a
 
         """;
 
