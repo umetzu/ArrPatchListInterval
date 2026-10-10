@@ -1,4 +1,16 @@
-﻿//dotnet publish -c Release -r linux-musl-x64
+﻿/*
+ * # Windows
+ * dotnet publish -c Release -r win-x64
+ * 
+ * # Linux x64
+ * dotnet publish -c Release -r linux-x64
+ * 
+ * # Linux ARM64 (Raspberry Pi, Apple Silicon)
+ * dotnet publish -c Release -r linux-arm64
+ * 
+ * # macOS
+ * dotnet publish -c Release -r osx-x64
+*/
 
 using dnlib.DotNet.Emit;
 using dnpatch;
@@ -9,6 +21,7 @@ double toInterval = 0.1;
 bool backup = true;
 bool printWelcome = true;
 bool autoMode = false;
+int patchedCount = 0;
 
 ReadArgs();
 
@@ -22,7 +35,10 @@ if (PrintWelcome())
             continue;
         }
 
-        Patch(dllPath);
+        if (Patch(dllPath))
+        {
+            patchedCount++;
+        }
     }
 }
 
@@ -32,6 +48,9 @@ if (!autoMode)
     Console.ReadKey();
 }
 
+// Exit with code 0 if patches were applied, 1 if not
+Environment.Exit(patchedCount > 0 ? 0 : 1);
+
 List<string> GetDefaultPaths()
 {
     if (OperatingSystem.IsWindows())
@@ -40,7 +59,7 @@ List<string> GetDefaultPaths()
     }
     else if (OperatingSystem.IsLinux())
     {
-        return ["/opt/radarr/Radarr.Core.dll", "/opt/sonarr/Sonarr.Core.dll"];
+        return ["/opt/Radarr/Radarr.Core.dll", "/opt/Sonarr/Sonarr.Core.dll"];
     }
     else if (OperatingSystem.IsMacOS())
     {
@@ -67,7 +86,7 @@ Target CreateTarget(Patcher patcher, string dllPath, string ns, string cls)
     return target;
 }
 
-void Patch(string dllPath)
+bool Patch(string dllPath)
 {
     Console.WriteLine($"\nPatching {dllPath}");
 
@@ -86,7 +105,7 @@ void Patch(string dllPath)
         {
             patcher.ReplaceInstruction(target);
         } 
-        
+
         Console.WriteLine($"\t{target.Class}. {(target.Index > -1 ? "" : "(Not)")} Found");
 
         if (targetRss.Index > -1)
@@ -95,15 +114,25 @@ void Patch(string dllPath)
         }
         Console.WriteLine($"\t{targetRss.Class}. {(targetRss.Index > -1 ? "" : "(Not)")} Found");
 
-        if (target.Index > -1 || targetRss.Index > -1)
+        // Success only if BOTH targets are patched
+        bool success = target.Index > -1 && targetRss.Index > -1;
+
+        if (success)
         {
             patcher.Save(false);
             Console.WriteLine($"Done.");
-        }        
+        }
+        else
+        {
+            Console.WriteLine($"Patch incomplete - both PlexImport and PlexRssImport must be found.");
+        }
+
+        return success;
     }
     catch (Exception e)
     {
         Console.WriteLine($"Error, can't apply patch: {e.Message}");
+        return false;
     }
 }
 

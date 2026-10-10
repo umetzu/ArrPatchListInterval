@@ -24,6 +24,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="arrpatch.sh" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="arrpatch.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="dnlib">
       <HintPath>..\dnpatch\dnlib.dll</HintPath>
       <Private>True</Private>
